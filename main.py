@@ -54,8 +54,10 @@ class Player(pygame.sprite.Sprite):
         # FIRING DELAY
         self.firing_delay = 100
         self.last_fired = pygame.time.get_ticks()
+        # ammo stuff
         self.clip_size = 8
         self.ammo = self.clip_size
+        # use for play reload sound only once
         self.reload_a = 0
 
     def update(self):
@@ -79,8 +81,11 @@ class Player(pygame.sprite.Sprite):
         # FIRING
         if key_state[pygame.K_SPACE]:
             self.fire()
-        if key_state[pygame.K_h]:
+
+        # RELOADING
+        if key_state[pygame.K_r]:
             self.reload()
+            # stuff to have reload sound just once
             self.reload_a += 1
             if self.reload_a == 1:
                 reload_sound.play()
@@ -105,20 +110,26 @@ class Player(pygame.sprite.Sprite):
     def fire(self):
         # get current time
         time_now = pygame.time.get_ticks()
+
+        # fire at rate of self.firing_delay
+        # fire only if ammo available
         if self.ammo > 0:
+            # if time between last shot and now is MORE than delay, FIRE
             if time_now - self.last_fired > self.firing_delay:
+                # update time of last fired shot
                 self.last_fired = time_now
+                # spawn projectile
                 projectile = Projectile(self.rect.centerx, self.rect.centery, enemy)
                 game_sprites.add(projectile)
                 projectiles.add(projectile)
+                # use 1 ammo, play pew
                 self.ammo -= 1
                 pew_sound.play()
+        # used to make reload sound play just once, RESET reload ct when firing
         self.reload_a = 0
 
     def reload(self):
         self.ammo = self.clip_size
-
-        # reload_sound.play()
 
     def textRender(self, surface, text, size, x, y):
         font_match = pygame.font.match_font('arial')
@@ -133,15 +144,12 @@ class Player(pygame.sprite.Sprite):
         # add text surface to location of text rect
         surface.blit(text_surface, text_rect)
 
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
         self.image = pygame.image.load(os.path.join(img_dir, "red circle.png")).convert()
         self.image = pygame.transform.scale(self.image, (50, 50))
-        # self.rect = self.image_scaled.get_rect()
-
-        # self.image.fill(WHITE)
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
 
         self.rect.centerx = width / 2
@@ -169,9 +177,11 @@ class Enemy(pygame.sprite.Sprite):
         if key_state[pygame.K_i]:
             self.speed_y = -self.speed
 
+        # move speed units every update
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
 
+        # stop when reaching window boundary
         if self.rect.right > width:
             self.rect.right = width
         if self.rect.left < 0:
@@ -181,41 +191,35 @@ class Enemy(pygame.sprite.Sprite):
         if self.rect.top < 0:
             self.rect.top = 0
 
+        # collisions GROUP variable, DELETE any projectiles that collide with enemy sprite
         collisions = pygame.sprite.groupcollide(enemy_sprites, projectiles, False, True)
 
-        if not self.display_hurt:
-            self.textRender(window, "haha can't shoot me loser", 15, self.rect.centerx, self.rect.top - 50)
-
         time_now = pygame.time.get_ticks()
+        # when ENEMY collides with any PROJECTILE
         if collisions:
             oof_sound.play()
+            # SET TIME to stop displaying hurt text
             self.time_to_stop_display_hurt = time_now + 600
             self.health -= 10
-        # DISPLAY FOR CERTAIN AMT OF TIME
-        # time now, time now + length
-        # display if time now < time now + length
+
+        # if ALIVE aka health above 0
         if self.health > 0:
+            # when alive, display health
             self.textRender(window, str(self.health), 20, self.rect.centerx, self.rect.top - 25)
+            # DISPLAY FOR CERTAIN AMT OF TIME
+            # time now, time now + length
+            # display if (time now) < (time now + length)
             if time_now < self.time_to_stop_display_hurt:
-                self.display_hurt = True
                 self.textRender(window, "SHIT i got fukin shot", 30, self.rect.centerx, self.rect.top - 60)
             else:
-                self.display_hurt = False
+                self.textRender(window, "haha can't shoot me loser", 15, self.rect.centerx, self.rect.top - 50)
         else:
             self.textRender(window, "sheeit i dead af", 60, self.rect.centerx, self.rect.top - 50)
             self.speed = 0
-            self.display_hurt = True
             self.oof += 1
 
         if self.oof == 1:
             oof_sound.play()
-
-        # self.textRender(window, str(self.time_to_stop_display_hurt), 30, width / 2, 10)
-        # if time_now < self.time_to_stop_display_hurt:
-        #     self.display_hurt = True
-        #     self.textRender(window, "SHIT i got fukin shot", 30, self.rect.centerx, self.rect.top - 60)
-        # else:
-        #     self.display_hurt = False
 
     def fire(self):
 
@@ -235,6 +239,7 @@ class Enemy(pygame.sprite.Sprite):
         text_rect.midtop = (x, y)
         # add text surface to location of text rect
         surface.blit(text_surface, text_rect)
+
 
 projectiles = pygame.sprite.Group()
 
@@ -261,7 +266,6 @@ class Projectile(pygame.sprite.Sprite):
         self.speed_x = x_d / dist * self.speed
         self.speed_y = y_d / dist * self.speed
 
-
     def update(self):
         self.rect.centerx -= self.speed_x
         self.rect.centery -= self.speed_y
@@ -274,7 +278,6 @@ class Projectile(pygame.sprite.Sprite):
             self.kill()
         if self.rect.top < 0:
             self.kill()
-
 
 
 # game sprite group
@@ -299,10 +302,6 @@ while not done:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
-            # if event.key == pygame.K_SPACE:
-            #     player.ammo = 5
-            # if event.key == pygame.K_RALT:
-            #     enemy.fire()
 
     key_state = pygame.key.get_pressed()
     if key_state[pygame.K_ESCAPE]:
