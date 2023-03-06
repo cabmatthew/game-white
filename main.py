@@ -33,7 +33,7 @@ pygame.mixer.init()
 snd_dir = os.path.join(assets_dir, "sounds")
 pew_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'pew.wav'))
 oof_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'oof.wav'))
-reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
+# reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -81,14 +81,16 @@ class Player(pygame.sprite.Sprite):
         # FIRING
         if key_state[pygame.K_SPACE]:
             self.fire()
+        if key_state[pygame.K_e]:
+            self.melee_hit()
 
         # RELOADING
         if key_state[pygame.K_r]:
             self.reload()
             # stuff to have reload sound just once
             self.reload_a += 1
-            if self.reload_a == 1:
-                reload_sound.play()
+            # if self.reload_a == 1:
+                # reload_sound.play()
 
         # NO GOING OUT OF WINDOW
         if self.rect.right > width:
@@ -119,7 +121,7 @@ class Player(pygame.sprite.Sprite):
                 # update time of last fired shot
                 self.last_fired = time_now
                 # spawn projectile
-                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy)
+                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 9999999, 10, 10)
                 game_sprites.add(projectile)
                 projectiles.add(projectile)
                 # use 1 ammo, play pew
@@ -143,6 +145,23 @@ class Player(pygame.sprite.Sprite):
         text_rect.midtop = (x, y)
         # add text surface to location of text rect
         surface.blit(text_surface, text_rect)
+
+    def melee_hit(self):
+        # get current time
+        time_now = pygame.time.get_ticks()
+
+        # if time between last shot and now is MORE than delay, FIRE
+        # delay of 100
+        if time_now - self.last_fired > 100:
+            # update time of last fired shot
+            self.last_fired = time_now
+            # spawn projectile
+            projectile = Projectile(self.rect.centerx, self.rect.centery + 5, enemy, 50, 50, 50)
+            game_sprites.add(projectile)
+            projectiles.add(projectile)
+
+            # play attack sound
+            # pew_sound.play()
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -221,11 +240,11 @@ class Enemy(pygame.sprite.Sprite):
         if self.oof == 1:
             oof_sound.play()
 
-    def fire(self):
-
-        projectile = Projectile(self.rect.centerx, self.rect.centery, player)
-        game_sprites.add(projectile)
-        projectiles.add(projectile)
+    # def fire(self):
+    #
+    #     projectile = Projectile(self.rect.centerx, self.rect.centery, player)
+    #     game_sprites.add(projectile)
+    #     projectiles.add(projectile)
 
     def textRender(self, surface, text, size, x, y):
         font_match = pygame.font.match_font('arial')
@@ -245,14 +264,14 @@ projectiles = pygame.sprite.Group()
 
 
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, x, y, targ):
+    def __init__(self, x, y, targ, time_alive, xscale, yscale):
         pygame.sprite.Sprite.__init__(self)
         self.targ = targ
 
         # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
         self.image = pygame.image.load(os.path.join(img_dir, "red circle.png")).convert()
         # self.image.fill(WHITE)
-        self.image = pygame.transform.scale(self.image, (10, 10))
+        self.image = pygame.transform.scale(self.image, (xscale, yscale))
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
 
         self.rect.centerx = x
@@ -265,6 +284,10 @@ class Projectile(pygame.sprite.Sprite):
 
         self.speed_x = x_d / dist * self.speed
         self.speed_y = y_d / dist * self.speed
+
+        # handling projectile time alive
+        time_now = pygame.time.get_ticks()
+        self.time_to_die = time_now + time_alive
 
     def update(self):
         self.rect.centerx -= self.speed_x
@@ -279,6 +302,10 @@ class Projectile(pygame.sprite.Sprite):
         if self.rect.top < 0:
             self.kill()
 
+        # bullet dies when it is alive for time_alive
+        time_now = pygame.time.get_ticks()
+        if time_now > self.time_to_die:
+            self.kill()
 
 # game sprite group
 game_sprites = pygame.sprite.Group()
