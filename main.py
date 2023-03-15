@@ -21,6 +21,7 @@ game_dir = os.path.dirname(__file__)
 assets_dir = os.path.join(game_dir, "assets")
 img_dir = os.path.join(assets_dir, "images")
 
+# Importing images for sprites & bullets
 green_circle = pygame.image.load(os.path.join(img_dir, "green circle.png")).convert()
 red_circle = pygame.image.load(os.path.join(img_dir, "red circle.png")).convert()
 
@@ -76,7 +77,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
 
-
         # FIRING
         if key_state[pygame.K_SPACE]:
             self.fire()
@@ -89,6 +89,13 @@ class Player(pygame.sprite.Sprite):
             if self.reload_a == 1:
                 reload_sound.play()
 
+        # AMMO TEXT
+        self.textRender(window, str(self.ammo), 30, 30, 10)
+        self.textRender(window, "/", 30, 50, 10)
+        self.textRender(window, str(self.clip_size), 30, 70, 10)
+        if self.ammo == 0:
+            self.textRender(window, "trash player got no ammo, RELOAD", 50, width / 2, 80)
+
         # NO GOING OUT OF WINDOW
         if self.rect.right > width:
             self.rect.right = width
@@ -99,12 +106,6 @@ class Player(pygame.sprite.Sprite):
         if self.rect.top < 0:
             self.rect.top = 0
 
-        # AMMO TEXT
-        self.textRender(window, str(self.ammo), 30, 30, 10)
-        self.textRender(window, "/", 30, 50, 10)
-        self.textRender(window, str(self.clip_size), 30, 70, 10)
-        if self.ammo == 0:
-            self.textRender(window, "trash player got no ammo, RELOAD", 50, width / 2, 80)
 
     def fire(self):
         # get current time
@@ -264,10 +265,11 @@ class Projectile(pygame.sprite.Sprite):
         self.rect.bottom = y
 
         self.speed = 15
+        # finding x & y distance
         x_d = self.rect.centerx - self.targ.rect.centerx
         y_d = self.rect.centery - self.targ.rect.centery
         dist = (x_d ** 2 + y_d ** 2) ** .5
-
+        # calculating velocity x & y components from distance
         self.speed_x = x_d / dist * self.speed
         self.speed_y = y_d / dist * self.speed
 
@@ -285,7 +287,6 @@ class Projectile(pygame.sprite.Sprite):
             self.kill()
         if self.rect.top < 0:
             self.kill()
-
 
 
 # game sprite group
