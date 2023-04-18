@@ -119,7 +119,9 @@ class Player(pygame.sprite.Sprite):
                 # update time of last fired shot
                 self.last_fired = time_now
                 # spawn projectile
-                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 10, 10)
+                mouse_pos = pygame.mouse.get_pos()
+                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 10, 10) # MAKE TO CURSOR
+                # projectile = Projectile(mouse_pos[0], mouse_pos[1], enemy, 10, 10)  # MAKE TO CURSOR
                 game_sprites.add(projectile)
                 projectiles.add(projectile)
                 # use 1 ammo, play pew
@@ -255,6 +257,7 @@ class Projectile(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.targ = targ
 
+        mouse_pos = pygame.mouse.get_pos()
         # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
         self.image = pygame.image.load(os.path.join(img_dir, "red circle.png")).convert()
         # self.image.fill(WHITE)
@@ -266,8 +269,10 @@ class Projectile(pygame.sprite.Sprite):
 
         self.speed = 15
         # finding x & y distance
-        x_d = self.rect.centerx - self.targ.rect.centerx
-        y_d = self.rect.centery - self.targ.rect.centery
+        # x_d = self.rect.centerx - self.targ.rect.centerx
+        # y_d = self.rect.centery - self.targ.rect.centery
+        x_d = self.rect.centerx - mouse_pos[0]
+        y_d = self.rect.centery - mouse_pos[1]
         dist = (x_d ** 2 + y_d ** 2) ** .5
         # calculating velocity x & y components from distance
         self.speed_x = x_d / dist * self.speed
@@ -303,6 +308,19 @@ enemy_sprites.add(enemy)
 
 clock = pygame.time.Clock()
 
+paused1 = False # HANDLING PAUSE
+def paused():
+    # Create a text surface with "Game is Paused"
+    text_surface = pygame.font.SysFont("Arial", 48).render("Game is Paused", True, (255, 0, 0))
+    text_rect = text_surface.get_rect()
+    text_rect.center = (width // 2, height // 2)
+
+    # Draw the text surface to the screen
+    window.blit(text_surface, text_rect)
+
+    # Update the screen
+    pygame.display.flip()
+
 while not done:
     time = pygame.time.get_ticks()
     for event in pygame.event.get():
@@ -311,6 +329,8 @@ while not done:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
+            if event.key == pygame.K_p: # HANDLING PAUSE
+                paused1 = not paused1
 
     key_state = pygame.key.get_pressed()
     if key_state[pygame.K_ESCAPE]:
@@ -318,8 +338,12 @@ while not done:
 
     window.fill(BLACK)
 
-    game_sprites.update()
-    game_sprites.draw(window)
+    # HANDLING PAUSE
+    if not paused1:
+        game_sprites.update()
+        game_sprites.draw(window)
+    else:
+        paused()
 
     pygame.display.flip()
     clock.tick(60)
