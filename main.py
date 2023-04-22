@@ -14,12 +14,13 @@ YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-rectX = width/2-30
-rectY = height/2-30
+rectX = width / 2 - 30
+rectY = height / 2 - 30
 
 game_dir = os.path.dirname(__file__)
 assets_dir = os.path.join(game_dir, "assets")
 img_dir = os.path.join(assets_dir, "images")
+fnt_dir = os.path.join(assets_dir, "fonts")
 
 # Importing images for sprites & bullets
 green_circle = pygame.image.load(os.path.join(img_dir, "green circle.png")).convert()
@@ -34,6 +35,7 @@ snd_dir = os.path.join(assets_dir, "sounds")
 pew_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'pew.wav'))
 oof_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'oof.wav'))
 reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -106,7 +108,6 @@ class Player(pygame.sprite.Sprite):
         if self.rect.top < 0:
             self.rect.top = 0
 
-
     def fire(self):
         # get current time
         time_now = pygame.time.get_ticks()
@@ -120,7 +121,7 @@ class Player(pygame.sprite.Sprite):
                 self.last_fired = time_now
                 # spawn projectile
                 mouse_pos = pygame.mouse.get_pos()
-                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 10, 10) # MAKE TO CURSOR
+                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 10, 10)  # MAKE TO CURSOR
                 # projectile = Projectile(mouse_pos[0], mouse_pos[1], enemy, 10, 10)  # MAKE TO CURSOR
                 game_sprites.add(projectile)
                 projectiles.add(projectile)
@@ -308,10 +309,12 @@ enemy_sprites.add(enemy)
 
 clock = pygame.time.Clock()
 
-paused1 = False # HANDLING PAUSE
+paused1 = False  # HANDLING PAUSE
+
+
 def paused():
     # Create a text surface with "Game is Paused"
-    text_surface = pygame.font.SysFont("Arial", 48).render("Game is Paused", True, (255, 0, 0))
+    text_surface = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 48).render("Game is Paused", True, (255, 0, 0))
     text_rect = text_surface.get_rect()
     text_rect.center = (width // 2, height // 2)
 
@@ -321,6 +324,7 @@ def paused():
     # Update the screen
     pygame.display.flip()
 
+
 while not done:
     time = pygame.time.get_ticks()
     for event in pygame.event.get():
@@ -329,7 +333,7 @@ while not done:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
-            if event.key == pygame.K_p: # HANDLING PAUSE
+            if event.key == pygame.K_p:  # HANDLING PAUSE
                 paused1 = not paused1
 
     key_state = pygame.key.get_pressed()
@@ -348,4 +352,3 @@ while not done:
     pygame.display.flip()
     clock.tick(60)
     pygame.display.flip()
-
