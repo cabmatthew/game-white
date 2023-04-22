@@ -330,15 +330,18 @@ def paused():
     pygame.display.flip()
 
 def title():
-    title_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 60).render("Daybreak", True,
-                                                                                                (255, 0 , 0))
+    title_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 80).render("Daybreak", True,
+                                                                                                BLACK)
     subtitle_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 15).render("Press [SPACEBAR] "
                                                                                                    "To Start", True,
-                                                                                                   (255, 0, 0))
+                                                                                                   BLACK)
+    title_background = pygame.image.load(os.path.join(img_dir, "title_bckgnd.png"))
+    title_background = pygame.transform.scale(title_background, (width, height))
     title_rect = title_text.get_rect()
     subtitle_rect = subtitle_text.get_rect()
     title_rect.center = (width / 2, height / 2)
-    subtitle_rect.center = (width / 2, height / 2 + 50)
+    subtitle_rect.center = (width / 2, height / 2 + 70)
+    window.blit(title_background, (0, 0))
     window.blit(title_text, title_rect)
     window.blit(subtitle_text, subtitle_rect)
     pygame.display.flip()
