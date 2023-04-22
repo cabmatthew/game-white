@@ -33,7 +33,38 @@ pygame.mixer.init()
 snd_dir = os.path.join(assets_dir, "sounds")
 pew_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'pew.wav'))
 oof_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'oof.wav'))
-reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
+# reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
+
+#######
+scene = [
+    "XXXXXXXXXXXXXXXXXXXXXX",
+    "X--------------------X",
+    "X--------------------X",
+    "X--------------------X",
+    "XXXXXXXX-------------X",
+    "X--------------------X",
+    "X------X-------------X",
+    "X--XX--XXXXXXXXXXXXXXX",
+    "X--XX--X-------------X",
+    "X--------------------X",
+    "X------X-------------X",
+    "XXXXXXXXXXXXXXXXXXXXXX"]
+#
+mappa = pygame.Surface((len(scene[0])*64,len(scene)*64))
+x,y = 0,0
+for row in scene:
+    for tile in row:
+        if tile in "-":
+            pygame.draw.rect(mappa,(0,155,0),((x,y),(64,64)))
+        elif tile in "X":
+            pygame.draw.rect(mappa,(125,125,125),((x,y),(64,64)))
+        else:
+            pygame.draw.rect(mappa,(255,128,122),((x,y),(64,64)))
+        x += 64
+    y += 64
+    x = 0
+##########
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -60,10 +91,19 @@ class Player(pygame.sprite.Sprite):
         # use for play reload sound only once
         self.reload_a = 0
 
+        ##############
+        self.map_pos= (0,0)
+        self.moveBox = (100,100,900,600)
+        #############
+
     def update(self):
+        ###
+        mx, my = self.map_pos
+
+        ####
         self.speed_x = 0
         self.speed_y = 0
-        speed = 7
+        speed = 5
 
         key_state = pygame.key.get_pressed()
         if key_state[pygame.K_a]:
@@ -74,8 +114,37 @@ class Player(pygame.sprite.Sprite):
             self.speed_y = speed
         if key_state[pygame.K_w]:
             self.speed_y = -speed
+
+        # if (self.map_pos[0] < 105):
+        #     self.speed_x = 0
+
+        # if (self.map_pos[1] < 105):
+        #     self.speed_y = 0
+
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
+
+        ####### IN FUTURE, STOP MOVEMENT WHEN COLLIDING WITH WALL
+        if player.rect.x <= self.moveBox[0]:
+            self.rect.x += speed
+            if self.map_pos[0] < 105: ### HANDLING REACHING MAP BORDER
+                mx += speed
+        elif player.rect.x >= self.moveBox[2]-32:
+            self.rect.x -= speed
+            if self.map_pos[0] > -490:
+                mx -= speed
+        if player.rect.y <= self.moveBox[1]:
+            self.rect.y += speed
+            if self.map_pos[1] < 105:
+                my += speed
+        elif player.rect.y >= self.moveBox[3]-32:
+            self.rect.y -= speed
+            if self.map_pos[1] > -150:
+                my -= speed
+        self.map_pos = (mx,my)
+
+        self.render(window)
+        ##########
 
         # FIRING
         if key_state[pygame.K_SPACE]:
@@ -86,8 +155,8 @@ class Player(pygame.sprite.Sprite):
             self.reload()
             # stuff to have reload sound just once
             self.reload_a += 1
-            if self.reload_a == 1:
-                reload_sound.play()
+            # if self.reload_a == 1:         RELOAD SOUND COMMENTED OUT
+                # reload_sound.play()
 
         # AMMO TEXT
         self.textRender(window, str(self.ammo), 30, 30, 10)
@@ -96,17 +165,31 @@ class Player(pygame.sprite.Sprite):
         if self.ammo == 0:
             self.textRender(window, "trash player got no ammo, RELOAD", 50, width / 2, 80)
 
+        # SHOWING LOCATION IN MAP
+        self.textRender(window, str(self.map_pos), 30, self.rect.centerx, self.rect.top - 60)
+
         # NO GOING OUT OF WINDOW
-        if self.rect.right > width:
-            self.rect.right = width
-        if self.rect.left < 0:
-            self.rect.left = 0
-        if self.rect.bottom > height:
-            self.rect.bottom = height
-        if self.rect.top < 0:
-            self.rect.top = 0
+        # if self.rect.right > width:
+        #     self.rect.right = width
+        # if self.rect.left < 0:
+        #     self.rect.left = 0
+        # if self.rect.bottom > height:
+        #     self.rect.bottom = height
+        # if self.rect.top < 0:
+        #     self.rect.top = 0
+        # if self.map_pos[0] < 100:
+        #     self.rect.x = 100
+        # if self.map_pos[1] < 0:
+        #     self.rect.y = 0
+        # if self.map_pos[0] > 800:
+        #     self.rect.x = 799
+        # if self.map_pos[1] > 700:
+        #     self.rect.y = 699
 
-
+#########
+    def render(self,window):
+        window.blit(self.image,(self.rect.x,self.rect.y))
+##########
     def fire(self):
         # get current time
         time_now = pygame.time.get_ticks()
@@ -340,6 +423,11 @@ while not done:
 
     # HANDLING PAUSE
     if not paused1:
+
+        window.fill((0, 155, 0))
+        window.blit(mappa, player.map_pos)
+        player.render(window)
+
         game_sprites.update()
         game_sprites.draw(window)
     else:
