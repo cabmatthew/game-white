@@ -45,14 +45,14 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
         self.image = pygame.image.load(os.path.join(img_dir, "green circle.png")).convert_alpha()
-        self.image = pygame.transform.scale(self.image, (50, 50))
+        self.image = pygame.transform.scale(self.image, (30, 30))
         # self.rect = self.image_scaled.get_rect()
 
         # self.image.fill(WHITE)
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
 
-        self.rect.centerx = width / 2
-        self.rect.bottom = height - 20
+        self.rect.centerx = 100
+        self.rect.bottom = 100
         self.speed_x = 0.0
         self.speed_y = 0.0
 
@@ -66,9 +66,12 @@ class Player(pygame.sprite.Sprite):
         self.reload_a = 0
 
     def update(self):
+        self.textRender(window, str(self.rect.centerx), 25, self.rect.centerx - 50, self.rect.centery + 50)
+        self.textRender(window, str(self.rect.centery), 25, self.rect.centerx + 50, self.rect.centery + 50)
+
         self.speed_x = 0
         self.speed_y = 0
-        speed = 7
+        speed = 2.5
 
         key_state = pygame.key.get_pressed()
         mouse_state = pygame.mouse.get_pressed()
@@ -125,7 +128,7 @@ class Player(pygame.sprite.Sprite):
                 self.last_fired = time_now
                 # spawn projectile
                 mouse_pos = pygame.mouse.get_pos()
-                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 10, 10)  # MAKE TO CURSOR
+                projectile = Projectile(self.rect.centerx, self.rect.centery, 10, 10)  # MAKE TO CURSOR
                 # projectile = Projectile(mouse_pos[0], mouse_pos[1], enemy, 10, 10)  # MAKE TO CURSOR
                 game_sprites.add(projectile)
                 projectiles.add(projectile)
@@ -152,21 +155,20 @@ class Player(pygame.sprite.Sprite):
         surface.blit(text_surface, text_rect)
 
     def meleeHit(self):
-        projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 50, 10)
+        projectile = Projectile(self.rect.centerx, self.rect.centery, 50, 10)
         # projectile = Projectile(self.rect.centerx, self.rect.centery, player)
         #     game_sprites.add(projectile)
         #     projectiles.add(projectile)
 
-
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, coord):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(os.path.join(img_dir, "red circle.png")).convert_alpha()
-        self.image = pygame.transform.scale(self.image, (50, 50))
+        self.image = pygame.transform.scale(self.image, (30, 30))
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
 
-        self.rect.centerx = width / 2
-        self.rect.bottom = height - 20
+        self.rect.centerx = coord[0]
+        self.rect.centery = coord[1]
         self.speed_x = 0.0
         self.speed_y = 0.0
         self.speed = 7
@@ -178,35 +180,8 @@ class Enemy(pygame.sprite.Sprite):
         self.oof = 0
 
     def update(self):
-        self.speed_x = 0.0
-        self.speed_y = 0.0
-
-        key_state = pygame.key.get_pressed()
-        if key_state[pygame.K_j]:
-            self.speed_x = -self.speed
-        if key_state[pygame.K_l]:
-            self.speed_x = self.speed
-        if key_state[pygame.K_k]:
-            self.speed_y = self.speed
-        if key_state[pygame.K_i]:
-            self.speed_y = -self.speed
-
-        # move speed units every update
-        self.rect.x += self.speed_x
-        self.rect.y += self.speed_y
-
-        # stop when reaching window boundary
-        if self.rect.right > width:
-            self.rect.right = width
-        if self.rect.left < 0:
-            self.rect.left = 0
-        if self.rect.bottom > height:
-            self.rect.bottom = height
-        if self.rect.top < 0:
-            self.rect.top = 0
-
         # collisions GROUP variable, DELETE any projectiles that collide with enemy sprite
-        collisions = pygame.sprite.groupcollide(enemy_sprites, projectiles, False, True)
+        collisions = pygame.sprite.groupcollide(projectiles, enemy_sprites, True, False)
 
         time_now = pygame.time.get_ticks()
         # when ENEMY collides with any PROJECTILE
@@ -219,14 +194,14 @@ class Enemy(pygame.sprite.Sprite):
         # if ALIVE aka health above 0
         if self.health > 0:
             # when alive, display health
-            self.textRender(window, str(self.health), 20, self.rect.centerx, self.rect.top - 25)
+            self.textRender(window, str(self.health), 10, self.rect.centerx, self.rect.top - 25)
             # DISPLAY FOR CERTAIN AMT OF TIME
             # time now, time now + length
             # display if (time now) < (time now + length)
-            if time_now < self.time_to_stop_display_hurt:
-                self.textRender(window, "o no i got shot", 30, self.rect.centerx, self.rect.top - 60)
-            else:
-                self.textRender(window, "haha can't shoot me loser", 15, self.rect.centerx, self.rect.top - 50)
+            # if time_now < self.time_to_stop_display_hurt:
+                # self.textRender(window, "o no i got shot", 30, self.rect.centerx, self.rect.top - 60)
+            # else:
+                # self.textRender(window, "haha can't shoot me loser", 15, self.rect.centerx, self.rect.top - 50)
         else:
             self.kill()
 
@@ -250,9 +225,9 @@ projectiles = pygame.sprite.Group()
 
 
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, x, y, targ, xscale, yscale):
+    def __init__(self, x, y, xscale, yscale):
         pygame.sprite.Sprite.__init__(self)
-        self.targ = targ
+        # self.targ = targ
 
         mouse_pos = pygame.mouse.get_pos()
         # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
@@ -291,17 +266,20 @@ class Projectile(pygame.sprite.Sprite):
             self.kill()
 
 
-# game sprite group
-game_sprites = pygame.sprite.Group()
-enemy_sprites = pygame.sprite.Group()
 
-# create player object
-player = Player()
-enemy = Enemy()
-# add sprite to game's sprite group
-game_sprites.add(player)
-game_sprites.add(enemy)
-enemy_sprites.add(enemy)
+# # game sprite group
+# game_sprites = pygame.sprite.Group()
+# enemy_sprites = pygame.sprite.Group()
+# player_sprites = pygame.sprite.Group()
+#
+# # create player object
+# player = Player()
+# enemy = Enemy(600, 50)
+# # add sprite to game's sprite group
+# game_sprites.add(player)
+# game_sprites.add(enemy)
+# enemy_sprites.add(enemy)
+# player_sprites.add(player)
 
 clock = pygame.time.Clock()
 
@@ -342,18 +320,15 @@ def title():
     pygame.display.flip()
 
 
+global map_screen
 map_screen = False
 
 
 class Bus(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
         self.image = pygame.image.load(os.path.join(img_dir, "busD.png")).convert_alpha()
         self.image = pygame.transform.scale(self.image, (70, 70))
-        self.rect = self.image.get_rect()
-
-        # self.image.fill(WHITE)
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
 
         self.rect.centerx = 50
@@ -362,8 +337,8 @@ class Bus(pygame.sprite.Sprite):
         self.speed_y = 0.0
 
     def update(self):
-        self.textRender(window, str(self.rect.centerx), 20, self.rect.centerx-50, self.rect.top-25)
-        self.textRender(window, str(self.rect.centery), 20, self.rect.centerx + 50, self.rect.top - 25)
+        # self.textRender(window, str(self.rect.centerx), 20, self.rect.centerx-50, self.rect.top-25)
+        # self.textRender(window, str(self.rect.centery), 20, self.rect.centerx + 50, self.rect.top - 25)
 
         self.speed_x = 0
         self.speed_y = 0
@@ -412,6 +387,8 @@ class Bus(pygame.sprite.Sprite):
         surface.blit(text_surface, text_rect)
 
 
+
+
 class MapLocation(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -432,7 +409,39 @@ class MapLocation(pygame.sprite.Sprite):
             # for event in pygame.event.get():
             #     if event.type == pygame.KEYDOWN:
             #         if event.key == pygame.K_SPACE:
+    def textRender(self, surface, text, size, x, y):
+        # specify font for text render - uses found font and size of text
+        font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), size)
+        # surface for text pixels - TRUE = anti-aliased
+        text_surface = font.render(text, True, WHITE)
+        # get rect for text surface rendering
+        text_rect = text_surface.get_rect()
+        # specify a relative location for text
+        text_rect.midtop = (x, y)
+        # add text surface to location of text rect
+        surface.blit(text_surface, text_rect)
 
+class BusPortal(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load(os.path.join(img_dir, "busD.png")).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (70, 70))
+        self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
+
+        self.rect.centerx = width - 100
+        self.rect.centery = height - 100
+
+    def update(self):
+        # collisions GROUP variable
+        collisions = pygame.sprite.groupcollide(player_sprites, bustransport, False, False)
+        # when  collides
+        if collisions:
+            self.textRender(window, "Press SPACE to enter this vehicle.", 15, width / 2, height - 50)
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        global map_screen
+                        map_screen = True
 
 
     def textRender(self, surface, text, size, x, y):
@@ -447,6 +456,19 @@ class MapLocation(pygame.sprite.Sprite):
         # add text surface to location of text rect
         surface.blit(text_surface, text_rect)
 
+# game sprite group
+game_sprites = pygame.sprite.Group()
+enemy_sprites = pygame.sprite.Group()
+player_sprites = pygame.sprite.Group()
+
+# create player object
+player = Player()
+# enemy = Enemy(600, 50)
+# add sprite to game's sprite group
+game_sprites.add(player)
+# game_sprites.add(enemy)
+# enemy_sprites.add(enemy)
+player_sprites.add(player)
 
 bussy = pygame.sprite.Group()
 bus = Bus()
@@ -455,6 +477,10 @@ bussy.add(bus)
 city1group = pygame.sprite.Group()
 city1 = MapLocation()
 city1group.add(city1)
+
+bustransport = pygame.sprite.Group()
+busportal = BusPortal()
+bustransport.add(busportal)
 
 
 def showmap():
@@ -467,6 +493,31 @@ def showmap():
 
     # Draw the text surface to the screen
     window.blit(text_surface, text_rect)
+
+spawnfirstenemies = True
+
+def firstlevel():
+    # enemy_locations = ([100, 100], [200, 100], [300, 100])
+    enemy_locations = (850, 100), (850, 250), (150, 400), (300, 600),
+    # for location in enemy_locations:
+    #     newEnemy = Enemy(location)
+    #     enemy_sprites.add(newEnemy)
+    #     game_sprites.add(newEnemy)
+
+    e1 = Enemy(enemy_locations[0])
+    e2 = Enemy(enemy_locations[1])
+    e3 = Enemy(enemy_locations[2])
+    e4 = Enemy(enemy_locations[3])
+    enemy_sprites.add(e1)
+    enemy_sprites.add(e2)
+    enemy_sprites.add(e3)
+    enemy_sprites.add(e4)
+    game_sprites.add(e1)
+    game_sprites.add(e2)
+    game_sprites.add(e3)
+    game_sprites.add(e4)
+
+
 
 
 while not done:
@@ -481,8 +532,8 @@ while not done:
                 pause_screen = not pause_screen
             if event.key == pygame.K_SPACE and title_screen:
                 title_screen = not title_screen
-            if event.key == pygame.K_m and not pause_screen and not title_screen:
-                map_screen = not map_screen
+            # if event.key == pygame.K_m and not pause_screen and not title_screen:
+            #     map_screen = not map_screen
 
 
     # window.fill((0,155,0))
@@ -491,9 +542,15 @@ while not done:
     if title_screen:
         title()
     elif not (pause_screen or map_screen) :
+        if spawnfirstenemies:
+            firstlevel()
+            spawnfirstenemies = False
+
         window.fill((0, 155, 0))
         game_sprites.update()
         game_sprites.draw(window)
+        bustransport.update()
+        bustransport.draw(window)
     elif pause_screen and not map_screen and not title_screen:
         paused()
     elif map_screen and not pause_screen and not title_screen:
