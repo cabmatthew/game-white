@@ -34,7 +34,7 @@ pygame.mixer.init()
 snd_dir = os.path.join(assets_dir, "sounds")
 pew_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'pew.wav'))
 oof_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'oof.wav'))
-# reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
+reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
 
 #######
 scene = [
@@ -51,16 +51,16 @@ scene = [
     "X------X-------------X",
     "XXXXXXXXXXXXXXXXXXXXXX"]
 #
-mappa = pygame.Surface((len(scene[0])*64,len(scene)*64))
-x,y = 0,0
+mappa = pygame.Surface((len(scene[0]) * 64, len(scene) * 64))
+x, y = 0, 0
 for row in scene:
     for tile in row:
         if tile in "-":
-            pygame.draw.rect(mappa,(0,155,0),((x,y),(64,64)))
+            pygame.draw.rect(mappa, (0, 155, 0), ((x, y), (64, 64)))
         elif tile in "X":
-            pygame.draw.rect(mappa,(125,125,125),((x,y),(64,64)))
+            pygame.draw.rect(mappa, (125, 125, 125), ((x, y), (64, 64)))
         else:
-            pygame.draw.rect(mappa,(255,128,122),((x,y),(64,64)))
+            pygame.draw.rect(mappa, (255, 128, 122), ((x, y), (64, 64)))
         x += 64
     y += 64
     x = 0
@@ -76,6 +76,7 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
         self.image = pygame.image.load(os.path.join(img_dir, "green circle.png")).convert()
+        self.image.set_colorkey(BLACK)
         self.image = pygame.transform.scale(self.image, (50, 50))
         # self.rect = self.image_scaled.get_rect()
 
@@ -86,6 +87,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.bottom = height - 20
         self.speed_x = 0.0
         self.speed_y = 0.0
+        self.speed = 5
 
         # FIRING DELAY
         self.firing_delay = 100
@@ -97,8 +99,8 @@ class Player(pygame.sprite.Sprite):
         self.reload_a = 0
 
         ##############
-        self.map_pos= (0,0)
-        self.moveBox = (100,100,900,600)
+        self.map_pos = (0, 0)
+        self.moveBox = (100, 100, 900, 600)
         #############
 
     def update(self):
@@ -108,18 +110,17 @@ class Player(pygame.sprite.Sprite):
         ####
         self.speed_x = 0
         self.speed_y = 0
-        speed = 5
 
         key_state = pygame.key.get_pressed()
         mouse_state = pygame.mouse.get_pressed()
         if key_state[pygame.K_a]:
-            self.speed_x = -speed
+            self.speed_x = -self.speed
         if key_state[pygame.K_d]:
-            self.speed_x = speed
+            self.speed_x = self.speed
         if key_state[pygame.K_s]:
-            self.speed_y = speed
+            self.speed_y = self.speed
         if key_state[pygame.K_w]:
-            self.speed_y = -speed
+            self.speed_y = -self.speed
 
         # if (self.map_pos[0] < 105):
         #     self.speed_x = 0
@@ -132,22 +133,22 @@ class Player(pygame.sprite.Sprite):
 
         ####### IN FUTURE, STOP MOVEMENT WHEN COLLIDING WITH WALL
         if player.rect.x <= self.moveBox[0]:
-            self.rect.x += speed
-            if self.map_pos[0] < 105: ### HANDLING REACHING MAP BORDER
-                mx += speed
-        elif player.rect.x >= self.moveBox[2]-32:
-            self.rect.x -= speed
+            self.rect.x += self.speed
+            if self.map_pos[0] < 105:  ### HANDLING REACHING MAP BORDER
+                mx += self.speed
+        elif player.rect.x >= self.moveBox[2] - 32:
+            self.rect.x -= self.speed
             if self.map_pos[0] > -490:
-                mx -= speed
+                mx -= self.speed
         if player.rect.y <= self.moveBox[1]:
-            self.rect.y += speed
+            self.rect.y += self.speed
             if self.map_pos[1] < 105:
-                my += speed
-        elif player.rect.y >= self.moveBox[3]-32:
-            self.rect.y -= speed
+                my += self.speed
+        elif player.rect.y >= self.moveBox[3] - 32:
+            self.rect.y -= self.speed
             if self.map_pos[1] > -150:
-                my -= speed
-        self.map_pos = (mx,my)
+                my -= self.speed
+        self.map_pos = (mx, my)
 
         self.render(window)
         ##########
@@ -161,8 +162,8 @@ class Player(pygame.sprite.Sprite):
             self.reload()
             # stuff to have reload sound just once
             self.reload_a += 1
-            # if self.reload_a == 1:         RELOAD SOUND COMMENTED OUT
-                # reload_sound.play()
+            if self.reload_a == 1:
+                reload_sound.play()
 
         # AMMO TEXT
         self.textRender(window, str(self.ammo), 20, 30, 10)
@@ -174,6 +175,7 @@ class Player(pygame.sprite.Sprite):
         # SHOWING LOCATION IN MAP
         self.textRender(window, str(self.map_pos), 30, self.rect.centerx, self.rect.top - 60)
 
+        # todo ask matt if this is needed anymore
         # NO GOING OUT OF WINDOW
         # if self.rect.right > width:
         #     self.rect.right = width
@@ -192,10 +194,11 @@ class Player(pygame.sprite.Sprite):
         # if self.map_pos[1] > 700:
         #     self.rect.y = 699
 
-#########
-    def render(self,window):
-        window.blit(self.image,(self.rect.x,self.rect.y))
-##########
+    #########
+    def render(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
+    ##########
     def fire(self):
         # get current time
         time_now = pygame.time.get_ticks()
@@ -244,34 +247,41 @@ class Player(pygame.sprite.Sprite):
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self):
+        # configures mob sprite image that will be seen in the game
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(os.path.join(img_dir, "red circle.png")).convert()
+        self.image.set_colorkey(BLACK)
         self.image = pygame.transform.scale(self.image, (50, 50))
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
-
+        # coordinates for the mobs in the game
         self.rect.centerx = width / 2
         self.rect.bottom = height - 20
         self.speed_x = 0.0
         self.speed_y = 0.0
-        self.speed = 7
-
-        self.health = 100
+        self.speed = 1
+        self.map_pos = (0, 0)
+        self.move_box = (100, 100, 900, 600)
+        # health
+        self.health = 30  # initially set to 100
         self.display_hurt = False
         self.time_to_stop_display_hurt = 0
         self.oof = 0
 
+
     def update(self):
+        self.mx, self.my = self.map_pos
         self.speed_x = 0.0
         self.speed_y = 0.0
+        # todo remove main prefix
+        player_x, player_y = player.map_pos
 
-        key_state = pygame.key.get_pressed()
-        if key_state[pygame.K_j]:
-            self.speed_x = -self.speed
-        if key_state[pygame.K_l]:
+        if player.rect.x > self.rect.x:
             self.speed_x = self.speed
-        if key_state[pygame.K_k]:
+        if player.rect.y > self.rect.y:
             self.speed_y = self.speed
-        if key_state[pygame.K_i]:
+        if player.rect.x < self.rect.x:
+            self.speed_x = -self.speed
+        if player.rect.y < self.rect.y:
             self.speed_y = -self.speed
 
         # move speed units every update
@@ -279,14 +289,25 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.y += self.speed_y
 
         # stop when reaching window boundary
-        if self.rect.right > width:
-            self.rect.right = width
-        if self.rect.left < 0:
-            self.rect.left = 0
-        if self.rect.bottom > height:
-            self.rect.bottom = height
-        if self.rect.top < 0:
-            self.rect.top = 0
+        if self.rect.x <= self.move_box[0]:
+            self.rect.x += self.speed
+            if self.map_pos[0] < 105:  ### HANDLING REACHING MAP BORDER
+                self.mx += self.speed
+        elif self.rect.x >= self.move_box[2] - 32:
+            self.rect.x -= self.speed
+            if self.map_pos[0] > -490:
+                self.mx -= self.speed
+        if self.rect.y <= self.move_box[1]:
+            self.rect.y += self.speed
+            if self.map_pos[1] < 105:
+                self.my += self.speed
+        elif self.rect.y >= self.move_box[3] - 32:
+            self.rect.y -= self.speed
+            if self.map_pos[1] > -150:
+                self.my -= self.speed
+        self.map_pos = (self.mx, self.my)
+
+        self.render(window)
 
         # collisions GROUP variable, DELETE any projectiles that collide with enemy sprite
         collisions = pygame.sprite.groupcollide(enemy_sprites, projectiles, False, True)
@@ -324,6 +345,9 @@ class Enemy(pygame.sprite.Sprite):
     #     game_sprites.add(projectile)
     #     projectiles.add(projectile)
 
+    def render(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
     def textRender(self, surface, text, size, x, y):
         # specify font for text render - uses found font and size of text
         font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), size)
@@ -348,6 +372,7 @@ class Projectile(pygame.sprite.Sprite):
         mouse_pos = pygame.mouse.get_pos()
         # self.image = pygame.Surface((30, 30)) # how sprite looks in game window
         self.image = pygame.image.load(os.path.join(img_dir, "red circle.png")).convert()
+        self.image.set_colorkey(BLACK)
         # self.image.fill(WHITE)
         self.image = pygame.transform.scale(self.image, (xscale, yscale))
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
@@ -413,6 +438,7 @@ def paused():
     # Update the screen
     pygame.display.flip()
 
+
 def title():
     title_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 80).render("Daybreak", True,
                                                                                                 BLACK)
@@ -429,6 +455,7 @@ def title():
     window.blit(title_text, title_rect)
     window.blit(subtitle_text, subtitle_rect)
     pygame.display.flip()
+
 
 while not done:
     time = pygame.time.get_ticks()
@@ -466,4 +493,3 @@ while not done:
     pygame.display.flip()
     clock.tick(60)
     pygame.display.flip()
-
