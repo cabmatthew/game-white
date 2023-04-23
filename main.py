@@ -66,8 +66,8 @@ class Player(pygame.sprite.Sprite):
         self.reload_a = 0
 
     def update(self):
-        self.textRender(window, str(self.rect.centerx), 25, self.rect.centerx - 50, self.rect.centery + 50)
-        self.textRender(window, str(self.rect.centery), 25, self.rect.centerx + 50, self.rect.centery + 50)
+        # self.textRender(window, str(self.rect.centerx), 25, self.rect.centerx - 50, self.rect.centery + 50)
+        # self.textRender(window, str(self.rect.centery), 25, self.rect.centerx + 50, self.rect.centery + 50)
 
         self.speed_x = 0
         self.speed_y = 0
@@ -171,7 +171,8 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.centery = coord[1]
         self.speed_x = 0.0
         self.speed_y = 0.0
-        self.speed = 7
+        self.speed = 0
+        self.chase = False
 
         self.health = 100
         self.display_hurt = False
@@ -180,6 +181,31 @@ class Enemy(pygame.sprite.Sprite):
         self.oof = 0
 
     def update(self):
+        if self.chase:
+            self.speed = 1
+
+        x_d = self.rect.centerx - player.rect.centerx
+        y_d = self.rect.centery - player.rect.centery
+        self.dist = (x_d ** 2 + y_d ** 2) ** .5
+        # self.textRender(window, str(self.dist), 30, self.rect.centerx, self.rect.top - 60)
+        if self.dist < 150:
+            self.chase = True
+
+        self.speed_x = 0.0
+        self.speed_y = 0.0
+        if player.rect.x > self.rect.x:
+            self.speed_x = self.speed
+        if player.rect.y > self.rect.y:
+            self.speed_y = self.speed
+        if player.rect.x < self.rect.x:
+            self.speed_x = -self.speed
+        if player.rect.y < self.rect.y:
+            self.speed_y = -self.speed
+
+        # move speed units every update
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+
         # collisions GROUP variable, DELETE any projectiles that collide with enemy sprite
         collisions = pygame.sprite.groupcollide(projectiles, enemy_sprites, True, False)
 
