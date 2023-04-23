@@ -14,12 +14,13 @@ YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-rectX = width/2-30
-rectY = height/2-30
+rectX = width / 2 - 30
+rectY = height / 2 - 30
 
 game_dir = os.path.dirname(__file__)
 assets_dir = os.path.join(game_dir, "assets")
 img_dir = os.path.join(assets_dir, "images")
+fnt_dir = os.path.join(assets_dir, "fonts")
 
 # Importing images for sprites & bullets
 green_circle = pygame.image.load(os.path.join(img_dir, "green circle.png")).convert()
@@ -66,6 +67,10 @@ for row in scene:
 ##########
 
 
+# FONT
+custom_font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"))
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -106,6 +111,7 @@ class Player(pygame.sprite.Sprite):
         speed = 5
 
         key_state = pygame.key.get_pressed()
+        mouse_state = pygame.mouse.get_pressed()
         if key_state[pygame.K_a]:
             self.speed_x = -speed
         if key_state[pygame.K_d]:
@@ -147,7 +153,7 @@ class Player(pygame.sprite.Sprite):
         ##########
 
         # FIRING
-        if key_state[pygame.K_SPACE]:
+        if mouse_state[0]:
             self.fire()
 
         # RELOADING
@@ -159,11 +165,11 @@ class Player(pygame.sprite.Sprite):
                 # reload_sound.play()
 
         # AMMO TEXT
-        self.textRender(window, str(self.ammo), 30, 30, 10)
-        self.textRender(window, "/", 30, 50, 10)
-        self.textRender(window, str(self.clip_size), 30, 70, 10)
+        self.textRender(window, str(self.ammo), 20, 30, 10)
+        self.textRender(window, "/", 20, 50, 10)
+        self.textRender(window, str(self.clip_size), 20, 70, 10)
         if self.ammo == 0:
-            self.textRender(window, "trash player got no ammo, RELOAD", 50, width / 2, 80)
+            self.textRender(window, "trash player got no ammo, RELOAD", 25, width / 2, 80)
 
         # SHOWING LOCATION IN MAP
         self.textRender(window, str(self.map_pos), 30, self.rect.centerx, self.rect.top - 60)
@@ -203,7 +209,7 @@ class Player(pygame.sprite.Sprite):
                 self.last_fired = time_now
                 # spawn projectile
                 mouse_pos = pygame.mouse.get_pos()
-                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 10, 10) # MAKE TO CURSOR
+                projectile = Projectile(self.rect.centerx, self.rect.centery, enemy, 10, 10)  # MAKE TO CURSOR
                 # projectile = Projectile(mouse_pos[0], mouse_pos[1], enemy, 10, 10)  # MAKE TO CURSOR
                 game_sprites.add(projectile)
                 projectiles.add(projectile)
@@ -217,9 +223,9 @@ class Player(pygame.sprite.Sprite):
         self.ammo = self.clip_size
 
     def textRender(self, surface, text, size, x, y):
-        font_match = pygame.font.match_font('arial')
+        # font_match = pygame.font.match_font('arial')
         # specify font for text render - uses found font and size of text
-        font = pygame.font.Font(font_match, size)
+        font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), size)
         # surface for text pixels - TRUE = anti-aliased
         text_surface = font.render(text, True, WHITE)
         # get rect for text surface rendering
@@ -319,9 +325,8 @@ class Enemy(pygame.sprite.Sprite):
     #     projectiles.add(projectile)
 
     def textRender(self, surface, text, size, x, y):
-        font_match = pygame.font.match_font('arial')
         # specify font for text render - uses found font and size of text
-        font = pygame.font.Font(font_match, size)
+        font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), size)
         # surface for text pixels - TRUE = anti-aliased
         text_surface = font.render(text, True, WHITE)
         # get rect for text surface rendering
@@ -391,10 +396,14 @@ enemy_sprites.add(enemy)
 
 clock = pygame.time.Clock()
 
-paused1 = False # HANDLING PAUSE
+pause_screen = False  # HANDLING PAUSE
+title_screen = True
+
+
 def paused():
     # Create a text surface with "Game is Paused"
-    text_surface = pygame.font.SysFont("Arial", 48).render("Game is Paused", True, (255, 0, 0))
+    text_surface = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 48).render("Game is Paused",
+                                                                                                  True, (255, 0, 0))
     text_rect = text_surface.get_rect()
     text_rect.center = (width // 2, height // 2)
 
@@ -402,6 +411,23 @@ def paused():
     window.blit(text_surface, text_rect)
 
     # Update the screen
+    pygame.display.flip()
+
+def title():
+    title_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 80).render("Daybreak", True,
+                                                                                                BLACK)
+    subtitle_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 15).render("Press [SPACEBAR] "
+                                                                                                   "To Start", True,
+                                                                                                   BLACK)
+    title_background = pygame.image.load(os.path.join(img_dir, "title_bckgnd.png"))
+    title_background = pygame.transform.scale(title_background, (width, height))
+    title_rect = title_text.get_rect()
+    subtitle_rect = subtitle_text.get_rect()
+    title_rect.center = (width / 2, height / 2)
+    subtitle_rect.center = (width / 2, height / 2 + 70)
+    window.blit(title_background, (0, 0))
+    window.blit(title_text, title_rect)
+    window.blit(subtitle_text, subtitle_rect)
     pygame.display.flip()
 
 while not done:
@@ -412,8 +438,11 @@ while not done:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 done = True
-            if event.key == pygame.K_p: # HANDLING PAUSE
-                paused1 = not paused1
+            if event.key == pygame.K_p:  # HANDLING PAUSE
+                pause_screen = not pause_screen
+            if event.key == pygame.K_SPACE and title_screen:
+                title_screen = not title_screen
+                pygame
 
     key_state = pygame.key.get_pressed()
     if key_state[pygame.K_ESCAPE]:
@@ -422,8 +451,9 @@ while not done:
     window.fill(BLACK)
 
     # HANDLING PAUSE
-    if not paused1:
-
+    if title_screen:
+        title()
+    elif not pause_screen:
         window.fill((0, 155, 0))
         window.blit(mappa, player.map_pos)
         player.render(window)
