@@ -490,7 +490,7 @@ class Bus(pygame.sprite.Sprite):
 
         self.speed_x = 0
         self.speed_y = 0
-        speed = 3
+        speed = 1
 
         key_state = pygame.key.get_pressed()
         if key_state[pygame.K_a]:
