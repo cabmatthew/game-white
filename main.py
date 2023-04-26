@@ -95,7 +95,7 @@ class Player(pygame.sprite.Sprite):
 
         self.speed_x = 0
         self.speed_y = 0
-        speed = 3
+        speed = 1
 
         # key_state = pygame.key.get_pressed()
         # mouse_state = pygame.mouse.get_pressed()
@@ -490,7 +490,7 @@ class Bus(pygame.sprite.Sprite):
 
         self.speed_x = 0
         self.speed_y = 0
-        speed = 1
+        speed = 3
 
         key_state = pygame.key.get_pressed()
         if key_state[pygame.K_a]:
@@ -681,7 +681,7 @@ class TextSprite(pygame.sprite.Sprite):
     def __init__(self, x, y, twidth, theight, text2):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface([twidth, theight])
-        self.image.fill(BLUE) # DELETE WHEN WANT INVISIBLE
+        # self.image.fill(BLUE) # DELETE WHEN WANT INVISIBLE
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
