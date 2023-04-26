@@ -40,6 +40,7 @@ ded_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'ded.wav'))
 aggro_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'aggro.wav'))
 shot_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'shot.wav'))
 busstart_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'busstart.wav'))
+bgm_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'bgm.wav'))
 
 # FONT
 custom_font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"))
@@ -446,7 +447,17 @@ def paused():
     pygame.display.flip()
 
 
+global bgm
+bgm = False
+
+
 def title():
+
+    global bgm
+    if bgm == False:
+        bgm_sound.play()
+        bgm = True
+
     title_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 80).render("Daybreak", True,
                                                                                                 BLACK)
     subtitle_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 15).render("Press [SPACEBAR] "
