@@ -36,6 +36,10 @@ snd_dir = os.path.join(assets_dir, "sounds")
 pew_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'pew.wav'))
 oof_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'oof.wav'))
 reload_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'reload.wav'))
+ded_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'ded.wav'))
+aggro_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'aggro.wav'))
+shot_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'shot.wav'))
+busstart_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'busstart.wav'))
 
 # FONT
 custom_font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"))
@@ -71,8 +75,8 @@ class Player(pygame.sprite.Sprite):
         # self.image.fill(WHITE)
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
 
-        self.rect.centerx = 100
-        self.rect.bottom = 100
+        self.rect.centerx = 30
+        self.rect.bottom = 120
         self.speed_x = 0.0
         self.speed_y = 0.0
 
@@ -91,7 +95,7 @@ class Player(pygame.sprite.Sprite):
 
         self.speed_x = 0
         self.speed_y = 0
-        speed = 1
+        speed = 3
 
         # key_state = pygame.key.get_pressed()
         # mouse_state = pygame.mouse.get_pressed()
@@ -162,6 +166,7 @@ class Player(pygame.sprite.Sprite):
         if self.rect.colliderect(t1):
             self.textRender(window, "Ugh, how long was I out for?", 15, width / 2, height - 100)
             self.textRender(window, "Where is everyone?", 15, width / 2, height - 50)
+            self.textRender(window, "Move with WASD", 20, width / 2, 300)
         if self.rect.colliderect(t2):
             self.textRender(window, "Oh, sweet! I have a gun in my pocket!", 15, width / 2, height - 150)
             self.textRender(window, "I should shoot that zombie with LMB", 15, width / 2, height - 100)
@@ -174,6 +179,10 @@ class Player(pygame.sprite.Sprite):
         if self.rect.colliderect(t5):
             self.textRender(window, "A bus? I should get in.", 15, width / 2, height - 150)
             self.textRender(window, "Hopefully I can find my friends.", 15, width / 2, height - 100)
+        if self.rect.colliderect(t6):
+            self.textRender(window, "A zombie? I'd better not touch it", 15, width / 2, height - 150)
+            self.textRender(window, "or else I'll die.", 15, width / 2, height - 100)
+
 
         # AMMO TEXT
         self.textRender(window, str(self.ammo), 20, 30, 10)
@@ -192,6 +201,12 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = height
         if self.rect.top < 0:
             self.rect.top = 0
+
+        # DEAD
+        dead = pygame.sprite.groupcollide(player_sprites, enemy_sprites, False, False)
+        if dead:
+            global dead_screen
+            dead_screen = True
 
     def fire(self):
         # get current time
@@ -246,6 +261,7 @@ class Enemy(pygame.sprite.Sprite):
         self.speed_y = 0.0
         self.speed = 0
         self.chase = False
+        self.aggro = False
 
         self.health = 100
         self.display_hurt = False
@@ -263,6 +279,11 @@ class Enemy(pygame.sprite.Sprite):
         # self.textRender(window, str(self.dist), 30, self.rect.centerx, self.rect.top - 60)
         if self.dist < 150:
             self.chase = True
+
+        if self.chase == True:
+            if self.aggro == False:
+                aggro_sound.play()
+                self.aggro = True
 
         self.speed_x = 0.0
         self.speed_y = 0.0
@@ -285,7 +306,8 @@ class Enemy(pygame.sprite.Sprite):
         time_now = pygame.time.get_ticks()
         # when ENEMY collides with any PROJECTILE
         if collisions:
-            oof_sound.play()
+            # oof_sound.play()
+            shot_sound.play()
             # SET TIME to stop displaying hurt text
             self.time_to_stop_display_hurt = time_now + 600
             self.health -= 10
@@ -304,6 +326,7 @@ class Enemy(pygame.sprite.Sprite):
                 # self.textRender(window, "haha can't shoot me loser", 15, self.rect.centerx, self.rect.top - 50)
         else:
             self.kill()
+            ded_sound.play()
 
         if self.oof == 1:
             oof_sound.play()
@@ -385,6 +408,27 @@ clock = pygame.time.Clock()
 
 pause_screen = False  # HANDLING PAUSE
 title_screen = True
+global dead_screen
+dead_screen = False
+
+def dead():
+    window.fill((0, 0, 0))
+    # Create a text surface with "Game is Paused"
+    text_surface = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 48).render("You died.",
+                                                                                                  True, (255, 0, 0))
+    text_rect = text_surface.get_rect()
+    text_rect.center = (width // 2, height // 2 - 50)
+
+    text_surface1 = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 30).render("Restart the game to try again.",
+                                                                                                  True, (255, 0, 0))
+    text_rect1 = text_surface1.get_rect()
+    text_rect1.center = (width // 2, height // 2 + 25)
+    # Draw the text surface to the screen
+    window.blit(text_surface, text_rect)
+    window.blit(text_surface1, text_rect1)
+
+    # Update the screen
+    pygame.display.flip()
 
 
 def paused():
@@ -423,6 +467,9 @@ def title():
 global map_screen
 map_screen = False
 
+global bus_started
+bus_started = False
+
 
 class Bus(pygame.sprite.Sprite):
     def __init__(self):
@@ -435,6 +482,7 @@ class Bus(pygame.sprite.Sprite):
         self.rect.bottom = height / 2
         self.speed_x = 0.0
         self.speed_y = 0.0
+
 
     def update(self):
         # self.textRender(window, str(self.rect.centerx), 20, self.rect.centerx-50, self.rect.top-25)
@@ -492,14 +540,14 @@ class Bus(pygame.sprite.Sprite):
 class MapLocation(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface([40, 40]) # how sprite looks in game window
-        self.image.fill(WHITE)
-        # pygame.draw.rect(self.image,WHITE,pygame.Rect(x, y, width, height))
+        self.image = pygame.image.load(os.path.join(img_dir, "city.png")).convert_alpha()
+        self.image = pygame.transform.scale(self.image, (400, 400))
         self.rect = self.image.get_rect()  # boundary for sprite, for moving, collision
+
+        # pygame.draw.rect(self.image,WHITE,pygame.Rect(x, y, width, height))
 
         self.rect.centerx = 500
         self.rect.centery = height / 2
-
     def update(self):
         # collisions GROUP variable
         collisions = pygame.sprite.groupcollide(bussy, city1group, False, False)
@@ -542,6 +590,7 @@ class BusPortal(pygame.sprite.Sprite):
                     if event.key == pygame.K_SPACE:
                         global map_screen
                         map_screen = True
+                        busstart_sound.play()
 
 
     def textRender(self, surface, text, size, x, y):
@@ -592,6 +641,8 @@ def showmap():
     # Draw the text surface to the screen
     window.blit(text_surface, text_rect)
 
+
+
 spawnfirstenemies = True
 
 
@@ -630,7 +681,7 @@ class TextSprite(pygame.sprite.Sprite):
     def __init__(self, x, y, twidth, theight, text2):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface([twidth, theight])
-        # self.image.fill(BLUE) # DELETE WHEN WANT INVISIBLE
+        self.image.fill(BLUE) # DELETE WHEN WANT INVISIBLE
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
@@ -659,7 +710,7 @@ class TextSprite(pygame.sprite.Sprite):
 
 
 texts = pygame.sprite.Group()
-t1 = TextSprite(100, 100, 200, 200, "Ugh, how long was I out for?")
+t1 = TextSprite(40, 100, 100, 200, "Ugh, how long was I out for?")
 texts.add(t1)
 t2 = TextSprite(400, 100, 200, 200, "Oh, sweet! I have a gun in my pocket!")
 texts.add(t2)
@@ -669,7 +720,8 @@ t4 = TextSprite(600, 350, 200, 200, "Oh, sweet! I have a gun in my pocket!")
 texts.add(t4)
 t5 = TextSprite(350, 600, 200, 200, "Oh, sweet! I have a gun in my pocket!")
 texts.add(t5)
-alltexts = [t1, t2]
+t6 = TextSprite(170, 100, 100, 200, "asdf")
+texts.add(t6)
 
 while not done:
     time = pygame.time.get_ticks()
@@ -692,7 +744,7 @@ while not done:
     # HANDLING PAUSE, title, and play states
     if title_screen:
         title()
-    elif not (pause_screen or map_screen) :
+    elif not (pause_screen or map_screen or dead_screen) :
         if spawnfirstenemies:
             firstlevel()
             spawnfirstenemies = False
@@ -715,6 +767,10 @@ while not done:
         bussy.draw(window)
         city1group.update()
         city1group.draw(window)
+
+    # global dead_screen
+    if dead_screen:
+        dead()
 
     clock.tick(60)
     pygame.display.flip()
