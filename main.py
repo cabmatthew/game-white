@@ -41,6 +41,7 @@ aggro_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'aggro.wav'))
 shot_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'shot.wav'))
 busstart_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'busstart.wav'))
 bgm_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'bgm.wav'))
+lose_sound = pygame.mixer.Sound(os.path.join(snd_dir, 'lose.wav'))
 
 # FONT
 custom_font = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"))
@@ -411,6 +412,8 @@ pause_screen = False  # HANDLING PAUSE
 title_screen = True
 global dead_screen
 dead_screen = False
+global death
+death = False
 
 def dead():
     window.fill((0, 0, 0))
@@ -455,7 +458,7 @@ def title():
 
     global bgm
     if bgm == False:
-        bgm_sound.play()
+        # bgm_sound.play()
         bgm = True
 
     title_text = pygame.font.Font(os.path.join(fnt_dir, "PressStart2P-Regular.ttf"), 80).render("Daybreak", True,
@@ -782,6 +785,9 @@ while not done:
     # global dead_screen
     if dead_screen:
         dead()
+        if death == False:
+            lose_sound.play()
+            death = True
 
     clock.tick(60)
     pygame.display.flip()
