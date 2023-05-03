@@ -564,7 +564,7 @@ class MapLocation(pygame.sprite.Sprite):
         self.rect.centery = height / 2
     def update(self):
         # collisions GROUP variable
-        collisions = pygame.sprite.groupcollide(bussy, city1group, False, False)
+        collisions = pygame.sprite.groupcollide(buss, city1group, False, False)
         # when  collides
         if collisions:
             self.textRender(window, "Press SPACE to enter this city.", 15, width / 2, height - 50)
@@ -631,9 +631,9 @@ game_sprites.add(player)
 # game_sprites.add(enemy)
 player_sprites.add(player)
 
-bussy = pygame.sprite.Group()
+buss = pygame.sprite.Group()
 bus = Bus()
-bussy.add(bus)
+buss.add(bus)
 
 city1group = pygame.sprite.Group()
 city1 = MapLocation()
@@ -777,8 +777,8 @@ while not done:
         paused()
     elif map_screen and not pause_screen and not title_screen:
         showmap()
-        bussy.update()
-        bussy.draw(window)
+        buss.update()
+        buss.draw(window)
         city1group.update()
         city1group.draw(window)
 
